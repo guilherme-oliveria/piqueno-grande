@@ -205,7 +205,9 @@ docs/PLANO.md
   1. lê a versão do nome da branch e cria e envia a tag `vX.Y.Z` no commit de merge da `main`;
   2. cria a branch `backmerge/vX.Y.Z` a partir da `main` e abre um PR dela para `develop` (título `Backmerge vX.Y.Z`).
 
-**Ação do Guilherme:** em Settings → Pages do repositório, escolher "GitHub Actions" como fonte.
+**Ação do Guilherme:** em Settings → Pages, escolher "GitHub Actions" como fonte; em Settings → Actions → General, marcar "Allow GitHub Actions to create and approve pull requests" (necessário para o PR de backmerge).
+
+**Observação para o Dev:** PRs abertos com o `GITHUB_TOKEN` não disparam outros workflows, então o `validar.yml` não roda sozinho no PR de backmerge. Inclua `workflow_dispatch` no `validar.yml` ou documente no README que o QA confere o backmerge pelo diff.
 
 **Critérios de aceite (verificados no PR da T8, antes do merge em `develop`):**
 - [ ] O workflow `deploy.yml` tem como gatilho apenas `push` na `main` (e opcionalmente `workflow_dispatch`), então não roda neste PR.
