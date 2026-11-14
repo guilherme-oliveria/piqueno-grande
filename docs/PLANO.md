@@ -207,7 +207,7 @@ docs/PLANO.md
 
 **Ação do Guilherme:** em Settings → Pages, escolher "GitHub Actions" como fonte; em Settings → Actions → General, marcar "Allow GitHub Actions to create and approve pull requests" (necessário para o PR de backmerge).
 
-**Observação para o Dev:** PRs abertos com o `GITHUB_TOKEN` não disparam outros workflows, então o `validar.yml` não roda sozinho no PR de backmerge. Inclua `workflow_dispatch` no `validar.yml` ou documente no README que o QA confere o backmerge pelo diff.
+**Observação sobre o CI do backmerge:** como o PR de backmerge é aberto com o `GITHUB_TOKEN`, o GitHub cria a execução do `validar.yml` em estado de aprovação pendente ([documentação](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow)). Alguém com permissão de escrita (o Guilherme) precisa clicar em **Approve workflows to run** no PR, e o QA só aprova depois de confirmar que o validador terminou verde. O Dev deve registrar esse passo no `README.md`.
 
 **Critérios de aceite (verificados no PR da T8, antes do merge em `develop`):**
 - [ ] O workflow `deploy.yml` tem como gatilho apenas `push` na `main` (e opcionalmente `workflow_dispatch`), então não roda neste PR.
@@ -225,7 +225,7 @@ docs/PLANO.md
 
 **Escopo:**
 - Abrir PR de `release/1.0.0` para `main` (título `Release 1.0.0`). Na branch de release só entram ajustes finais pequenos (ex.: versão no README); nada de funcionalidade nova.
-- Depois do merge na `main`, nada é feito à mão: a pipeline `release.yml` (T8) cria a tag `v1.0.0` no commit de merge da `main` e abre o PR `backmerge/v1.0.0` → `develop`, que passa pelo QA e é mergeado normalmente. Como o backmerge parte da `main`, ele inclui o commit de merge da release.
+- Depois do merge na `main`, nada é feito à mão: a pipeline `release.yml` (T8) cria a tag `v1.0.0` no commit de merge da `main` e abre o PR `backmerge/v1.0.0` → `develop`, que passa pelo QA e é mergeado com **Create a merge commit** (nunca squash nem rebase, que quebrariam a ancestralidade entre `main` e `develop`). Antes da revisão, o Guilherme aprova a execução do validador no PR (**Approve workflows to run**). Como o backmerge parte da `main`, ele inclui o commit de merge da release.
 
 **Critérios de aceite do PR de release (antes do merge):**
 - [ ] A branch se chama `release/1.0.0`, nasceu de `develop` e o PR aponta para `main`.
@@ -236,7 +236,7 @@ docs/PLANO.md
 - [ ] O workflow `deploy.yml` rodou na `main` e terminou verde.
 - [ ] `https://guilherme-oliveria.github.io/piqueno-grande/` abre o site sem erros no console.
 - [ ] A pipeline `release.yml` rodou verde, a tag `v1.0.0` existe e aponta para o commit de merge da release na `main`.
-- [ ] O PR `backmerge/v1.0.0` → `develop` foi aberto pela pipeline e, depois do merge, `develop` contém todos os commits da `main` (`git merge-base --is-ancestor origin/main origin/develop` retorna sucesso).
+- [ ] O PR `backmerge/v1.0.0` → `develop` foi aberto pela pipeline, a execução do `validar.yml` foi aprovada e terminou verde, o merge foi feito com **Create a merge commit** e, depois dele, `develop` contém todos os commits da `main` (`git merge-base --is-ancestor origin/main origin/develop` retorna sucesso).
 
 ---
 
