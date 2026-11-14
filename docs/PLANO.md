@@ -22,7 +22,7 @@ Uma página única, leve e divertida, que dá boas-vindas ao Piqueno. Ao abrir o
 2. O Dev abre um PR para `develop` com o número da tarefa no título (ex.: `T2: seção de boas-vindas`) e a checklist de critérios de aceite copiada no corpo.
 3. O Codex (QA) revisa o PR contra os critérios de aceite desta página e aprova ou pede mudanças.
 4. O Guilherme aprova e faz o merge. Só então o Dev começa a próxima tarefa.
-5. Ao final (T8), `develop` é levada para `main` por um PR de release, o que publica o site.
+5. Ao final (depois da T8), o Dev cria `release/1.0.0` a partir de `develop` e abre o PR dessa branch para `main`. O merge na `main` publica o site e é seguido da tag `v1.0.0` e do merge de volta de `main` em `develop` (seção "Release 1.0.0").
 
 Regras gerais que valem para todo PR (o QA deve checar sempre):
 
@@ -200,14 +200,36 @@ docs/PLANO.md
 **Escopo:**
 - `.github/workflows/deploy.yml` que publica a raiz do repositório no GitHub Pages a cada push na `main` (usando `actions/upload-pages-artifact` e `actions/deploy-pages`).
 - Atualizar o `README.md` com o link do site publicado e como rodar localmente (abrir `index.html`).
-- Depois do merge em `develop`: abrir PR de release `develop` → `main`.
+- O README já pode trazer a URL esperada: `https://guilherme-oliveria.github.io/piqueno-grande/`.
 
 **Ação do Guilherme:** em Settings → Pages do repositório, escolher "GitHub Actions" como fonte.
 
-**Critérios de aceite:**
-- [ ] O workflow `deploy.yml` roda apenas em push na `main` (e opcionalmente `workflow_dispatch`).
-- [ ] Após o merge do PR de release na `main`, o workflow termina verde e o site abre na URL do GitHub Pages.
-- [ ] O `README.md` tem o link do site e instruções para rodar localmente.
+**Critérios de aceite (verificados no PR da T8, antes do merge em `develop`):**
+- [ ] O workflow `deploy.yml` tem como gatilho apenas `push` na `main` (e opcionalmente `workflow_dispatch`), então não roda neste PR.
+- [ ] O workflow declara `permissions` com `pages: write` e `id-token: write`, usa `actions/configure-pages`, `actions/upload-pages-artifact` (com `path: .`) e `actions/deploy-pages`, e define o ambiente `github-pages`.
+- [ ] O YAML é válido (ex.: `actionlint` ou `npx yaml-lint` sem erros, saída colada no PR).
+- [ ] O `README.md` tem a URL esperada do site e instruções para rodar localmente.
+- [ ] CI verde.
+
+---
+
+## Release 1.0.0 (depois da T8)
+
+**Branch:** `release/1.0.0`, criada a partir de `develop` com tudo de T1 a T8 já mergeado.
+
+**Escopo:**
+- Abrir PR de `release/1.0.0` para `main` (título `Release 1.0.0`). Na branch de release só entram ajustes finais pequenos (ex.: versão no README); nada de funcionalidade nova.
+- Depois do merge na `main`: criar a tag `v1.0.0` na `main` e abrir PR de `main` para `develop` (ou de `release/1.0.0` para `develop`) para manter as branches alinhadas.
+
+**Critérios de aceite do PR de release (antes do merge):**
+- [ ] A branch se chama `release/1.0.0`, nasceu de `develop` e o PR aponta para `main`.
+- [ ] O diff contra `main` contém apenas o que já foi aprovado em T1 a T8 (mais ajustes finais mínimos).
+- [ ] CI verde.
+
+**Verificação pós-merge (feita pelo QA ou pelo Guilherme depois do merge na `main`):**
+- [ ] O workflow `deploy.yml` rodou na `main` e terminou verde.
+- [ ] `https://guilherme-oliveria.github.io/piqueno-grande/` abre o site sem erros no console.
+- [ ] A tag `v1.0.0` existe e `develop` contém os commits da `main`.
 
 ---
 
