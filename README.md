@@ -7,5 +7,6 @@ Site de boas-vindas ao Piqueno.
 - `main`: versão publicada.
 - `develop`: integração.
 - `feature/*`: uma branch por tarefa, criada a partir de `develop`, com PR para `develop`.
+- `release/X.Y.Z`: criada a partir de `develop`, com PR para `main`; depois do merge, a pipeline cria a tag `vX.Y.Z` e abre o PR `backmerge/vX.Y.Z` de `main` para `develop`.
 
 O plano de execução fica em [`docs/PLANO.md`](docs/PLANO.md).
