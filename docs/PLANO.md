@@ -22,7 +22,7 @@ Uma página única, leve e divertida, que dá boas-vindas ao Piqueno. Ao abrir o
 2. O Dev abre um PR para `develop` com o número da tarefa no título (ex.: `T2: seção de boas-vindas`) e a checklist de critérios de aceite copiada no corpo.
 3. O Codex (QA) revisa o PR contra os critérios de aceite desta página e aprova ou pede mudanças.
 4. O Guilherme aprova e faz o merge. Só então o Dev começa a próxima tarefa.
-5. Ao final (depois da T8), o Dev cria `release/1.0.0` a partir de `develop` e abre o PR dessa branch para `main`. O merge na `main` publica o site e é seguido da tag `v1.0.0` e do merge de volta de `main` em `develop` (seção "Release 1.0.0").
+5. Ao final (depois da T8), o Dev cria `release/1.0.0` a partir de `develop` e abre o PR dessa branch para `main`. O merge na `main` publica o site e dispara a pipeline de release, que cria a tag `v1.0.0` e abre o PR de retorno `backmerge/v1.0.0` → `develop` (seção "Release 1.0.0").
 
 Regras gerais que valem para todo PR (o QA deve checar sempre):
 
@@ -201,13 +201,17 @@ docs/PLANO.md
 - `.github/workflows/deploy.yml` que publica a raiz do repositório no GitHub Pages a cada push na `main` (usando `actions/upload-pages-artifact` e `actions/deploy-pages`).
 - Atualizar o `README.md` com o link do site publicado e como rodar localmente (abrir `index.html`).
 - O README já pode trazer a URL esperada: `https://guilherme-oliveria.github.io/piqueno-grande/`.
+- `.github/workflows/release.yml` que roda quando um PR de `release/X.Y.Z` é mergeado na `main` (`pull_request` do tipo `closed` com `merged == true`, base `main` e head começando com `release/`) e:
+  1. lê a versão do nome da branch e cria e envia a tag `vX.Y.Z` no commit de merge da `main`;
+  2. cria a branch `backmerge/vX.Y.Z` a partir da `main` e abre um PR dela para `develop` (título `Backmerge vX.Y.Z`).
 
 **Ação do Guilherme:** em Settings → Pages do repositório, escolher "GitHub Actions" como fonte.
 
 **Critérios de aceite (verificados no PR da T8, antes do merge em `develop`):**
 - [ ] O workflow `deploy.yml` tem como gatilho apenas `push` na `main` (e opcionalmente `workflow_dispatch`), então não roda neste PR.
 - [ ] O workflow declara `permissions` com `pages: write` e `id-token: write`, usa `actions/configure-pages`, `actions/upload-pages-artifact` (com `path: .`) e `actions/deploy-pages`, e define o ambiente `github-pages`.
-- [ ] O YAML é válido (ex.: `actionlint` ou `npx yaml-lint` sem erros, saída colada no PR).
+- [ ] O workflow `release.yml` só roda em PR mergeado de `release/*` para `main`, declara `permissions` com `contents: write` e `pull-requests: write`, cria a tag `vX.Y.Z` a partir do nome da branch e abre o PR `backmerge/vX.Y.Z` → `develop` partindo da `main` (não da branch de release).
+- [ ] Os YAMLs são válidos (ex.: `actionlint` ou `npx yaml-lint` sem erros, saída colada no PR).
 - [ ] O `README.md` tem a URL esperada do site e instruções para rodar localmente.
 - [ ] CI verde.
 
@@ -219,7 +223,7 @@ docs/PLANO.md
 
 **Escopo:**
 - Abrir PR de `release/1.0.0` para `main` (título `Release 1.0.0`). Na branch de release só entram ajustes finais pequenos (ex.: versão no README); nada de funcionalidade nova.
-- Depois do merge na `main`: criar a tag `v1.0.0` na `main` e abrir PR de `main` para `develop` (ou de `release/1.0.0` para `develop`) para manter as branches alinhadas.
+- Depois do merge na `main`, nada é feito à mão: a pipeline `release.yml` (T8) cria a tag `v1.0.0` no commit de merge da `main` e abre o PR `backmerge/v1.0.0` → `develop`, que passa pelo QA e é mergeado normalmente. Como o backmerge parte da `main`, ele inclui o commit de merge da release.
 
 **Critérios de aceite do PR de release (antes do merge):**
 - [ ] A branch se chama `release/1.0.0`, nasceu de `develop` e o PR aponta para `main`.
@@ -229,7 +233,8 @@ docs/PLANO.md
 **Verificação pós-merge (feita pelo QA ou pelo Guilherme depois do merge na `main`):**
 - [ ] O workflow `deploy.yml` rodou na `main` e terminou verde.
 - [ ] `https://guilherme-oliveria.github.io/piqueno-grande/` abre o site sem erros no console.
-- [ ] A tag `v1.0.0` existe e `develop` contém os commits da `main`.
+- [ ] A pipeline `release.yml` rodou verde, a tag `v1.0.0` existe e aponta para o commit de merge da release na `main`.
+- [ ] O PR `backmerge/v1.0.0` → `develop` foi aberto pela pipeline e, depois do merge, `develop` contém todos os commits da `main` (`git merge-base --is-ancestor origin/main origin/develop` retorna sucesso).
 
 ---
 
